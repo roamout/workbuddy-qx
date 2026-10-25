@@ -1,7 +1,7 @@
 /**
  * WorkBuddy 每日自动签到 —— Quantumult X 定时任务脚本
  *
- * 版本：v1.0.0
+ * 版本：v1.0.1（通知标题不再显示版本号）
  * 功能：
  *   1. 用长效令牌(refresh token)换新的接口令牌(accessToken)
  *   2. 查询签到状态，未签则领取(每日 +100 积分，第 7 天 +1000)
@@ -29,7 +29,7 @@
  *   重新开一次捕获重写、登录一次即可恢复。
  */
 
-const VERSION = "v1.0.0";
+const VERSION = "v1.0.1";
 
 // ============ 手动配置（可选，推荐用捕获重写自动获取，此处留空） ============
 const MANUAL_REFRESH_TOKEN = "";
@@ -297,8 +297,8 @@ async function main() {
     sub = signText + (balText ? "　" + balLine : "");
     body = [streakLine, travelLine].filter(Boolean).join("\n");
   }
-  notify("🎯 WorkBuddy 签到 " + VERSION, sub, body);
-  console.log(JSON.stringify(result));
+  notify("🎯 WorkBuddy 签到", sub, body);
+  console.log("[WorkBuddy " + VERSION + "] " + JSON.stringify(result));
   $done();
 }
 
