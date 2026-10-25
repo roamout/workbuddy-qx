@@ -37,13 +37,15 @@
 https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy.qx.conf
 ```
 
-国内网络访问 GitHub raw 不畅时，用 jsDelivr 镜像：
+**国内网络推荐用 jsDelivr CDN 版**（订阅和内部脚本都走 CDN，不依赖 raw.githubusercontent.com，能避免"规则显示了但脚本下载失败"的问题）：
 
 ```
-https://cdn.jsdelivr.net/gh/roamout/workbuddy-qx@main/workbuddy.qx.conf
+https://cdn.jsdelivr.net/gh/roamout/workbuddy-qx@main/workbuddy.cdn.conf
 ```
 
-保存后确认：① 该订阅已启用；② 设置 → MITM 已开启并已安装、信任证书（首次抓 HTTPS 必须）。订阅自带 `[mitm]` 主机名，会自动合并。
+> 两个 conf 区别：`workbuddy.qx.conf` 内的脚本走 GitHub raw；`workbuddy.cdn.conf` 内的脚本走 jsDelivr。已经添加过 raw 版的，先删掉旧订阅再添加 CDN 版，避免规则重复。
+
+保存后确认：① 该订阅已启用，展开后能看到 4 条规则；② 设置 → MITM 已开启并已安装、信任证书（首次抓 HTTPS 必须）。订阅自带 `[mitm]` 主机名，会自动合并。
 
 ### 第二步：登录一次，自动捕获令牌
 
@@ -74,26 +76,23 @@ jsDelivr 镜像版：
 | --- | --- | --- |
 | `workbuddy_capture_token.js` | 重写脚本（一次性） | 拦截登录/刷新请求，捕获 `refresh_token` 存入本地 |
 | `workbuddy_checkin.js` | 定时任务（长期运行） | 签到、领旅行奖励、查余额、令牌滚动续期 |
-| `workbuddy.qx.conf` | 重写订阅配置 | 含重写规则与 MITM 主机名 |
-
-## 高级：手动填写令牌
-
-不想用重写捕获，也可以手动获取令牌后填入 `workbuddy_checkin.js` 顶部的 `MANUAL_REFRESH_TOKEN`：
-
-- 电脑登录 WorkBuddy 客户端后，打开登录态文件：
-  - Windows：`%LOCALAPPDATA%\codebuddyextension\data\public\auth\workbuddy-desktop.info`
-  - macOS：`~/Library/Application Support/codebuddyextension/data/public/auth/workbuddy-desktop.info`
-- 提取其中 `auth.refreshToken` 字段（约 700 字符的 JWT）
-
-注意：手动填入的令牌优先级**低于**捕获脚本写入的本地存储；如需使用手动令牌，请先清除 QX 本地存储里的 `workbuddy_checkin_rt`。
+| `workbuddy.qx.conf` | 重写订阅配置（raw 版） | 含重写规则与 MITM 主机名，脚本走 GitHub raw |
+| `workbuddy.cdn.conf` | 重写订阅配置（CDN 版，国内推荐） | 同上，脚本走 jsDelivr |
 
 ## 常见问题
 
-**Q：收不到捕获成功通知？**
-- 确认 MITM 证书已安装且在系统设置中「信任」
-- 确认重写订阅已启用，QX 主界面连接状态正常
-- 杀掉 App 彻底重进；小程序抓不到就换 App（部分版本小程序对证书有校验）
-- 仍不行可在 QX 日志里查看 `WorkBuddyCapture` 输出
+**Q：收不到捕获成功通知？（按顺序排查）**
+1. 重写订阅已启用，展开能看到 **4 条规则**；旧订阅请删掉再重新添加（建议直接用 CDN 版）
+2. MITM 证书已安装且在系统设置「通用 → 关于本机 → 证书信任设置」中信任
+3. 打开 **QX 风车 → 日志**，保持在日志页，再去 WorkBuddy 退出账号重新登录：
+   - 日志里完全没有 `copilot.tencent.com` / `workbuddy` / `codebuddy` 相关请求 → 该 App 流量没走 QX（换 App 或小程序再试）
+   - 有请求但没有任何 `[WorkBuddyCapture]` 日志 → 脚本没下载成功，删掉订阅改用 **CDN 版** 重新添加
+   - 有 `[WorkBuddyCapture] probe ...` 日志但没成功 → 把该日志截图反馈，需要补充域名
+4. 杀掉 App 彻底重进；小程序抓不到就换 App（个别版本对证书有校验）
+
+**Q：手动填写令牌怎么做？**
+- 可把令牌填入 `workbuddy_checkin.js` 顶部 `MANUAL_REFRESH_TOKEN`（需用本地脚本而非远程任务）
+- 新版桌面客户端登录态文件（`workbuddy-desktop.info`）已加密（`$wbEncrypted` 信封），无法直接提取明文，重写捕获是最省事的方式
 
 **Q：什么时候需要重新捕获？**
 - 在 WorkBuddy 客户端里**退出了账号**；或长时间（超过 60 天）没有成功运行过签到
