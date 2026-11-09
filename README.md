@@ -1,6 +1,8 @@
-# WorkBuddy 每日自动签到（Quantumult X）
+# WorkBuddy 每日自动签到（Quantumult X / Surge）
 
 腾讯 WorkBuddy（CodeBuddy）「Buddy 加油站」自动签到脚本：打开 App / 小程序登录一次，重写脚本自动捕获长效令牌；之后每日由定时任务自动完成签到、领取 Buddy 旅行奖励、播报真实积分余额，长效令牌自动滚动续期，无需再管。
+
+> 同时支持 **Quantumult X** 与 **Surge** 两套代理软件，脚本逻辑一致，仅底层 API 不同（QX 用 `$task.fetch`/`$prefs`，Surge 用 `$httpClient`/`$persistentStore`）。
 
 ## 功能
 
@@ -74,10 +76,47 @@ jsDelivr 镜像版：
 
 | 文件 | 类型 | 作用 |
 | --- | --- | --- |
-| `workbuddy_capture_token.js` | 重写脚本（一次性） | 拦截登录/刷新请求，捕获 `refresh_token` 存入本地 |
-| `workbuddy_checkin.js` | 定时任务（长期运行） | 签到、领旅行奖励、查余额、令牌滚动续期 |
-| `workbuddy.qx.conf` | 重写订阅配置（raw 版） | 含重写规则与 MITM 主机名，脚本走 GitHub raw |
-| `workbuddy.cdn.conf` | 重写订阅配置（CDN 版，国内推荐） | 同上，脚本走 jsDelivr |
+| `workbuddy_capture_token.js` | QX 重写脚本（一次性） | 拦截登录/刷新请求，捕获 `refresh_token` 存入本地 |
+| `workbuddy_checkin.js` | QX 定时任务（长期运行） | 签到、领旅行奖励、查余额、令牌滚动续期 |
+| `workbuddy.qx.conf` | QX 重写订阅配置（raw 版） | 含重写规则与 MITM 主机名，脚本走 GitHub raw |
+| `workbuddy.cdn.conf` | QX 重写订阅配置（CDN 版，国内推荐） | 同上，脚本走 jsDelivr |
+| `workbuddy_capture_token.surge.js` | Surge 重写脚本（一次性） | 同 capture，适配 Surge `$persistentStore`/`$notification` |
+| `workbuddy_checkin.surge.js` | Surge 定时任务（长期运行） | 同 checkin，适配 Surge `$httpClient`/`$persistentStore` |
+| `workbuddy.sgmodule` | Surge 模块（raw 版） | 重写 + 定时任务 + MITM，一键安装，脚本走 GitHub raw |
+| `workbuddy.cdn.sgmodule` | Surge 模块（CDN 版，国内推荐） | 同上，脚本走 jsDelivr |
+
+## Surge 部署步骤
+
+### 第一步：安装模块
+
+打开 Surge → 首页「模块」→ 「安装新模块」，粘贴以下模块链接（**国内网络推荐 CDN 版**）：
+
+```
+https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy.sgmodule
+```
+
+jsDelivr CDN 版：
+
+```
+https://cdn.jsdelivr.net/gh/roamout/workbuddy-qx@main/workbuddy.cdn.sgmodule
+```
+
+> 两个模块二选一，不要同时装：`workbuddy.sgmodule` 脚本走 GitHub raw；`workbuddy.cdn.sgmodule` 走 jsDelivr。
+
+安装后确认：① 模块已启用；② 首页能看到「WorkBuddy 签到」定时任务和几条「WorkBuddy 令牌捕获」重写；③ 「MitM」已开启并安装、信任证书（首次抓 HTTPS 必须）。
+
+### 第二步：登录一次，自动捕获令牌
+
+1. 打开 **WorkBuddy App**（或微信 WorkBuddy 小程序）
+2. 退出账号后**重新登录一次**；本来就登录着的，杀掉 App 重进、或下拉刷新页面
+3. 稍等片刻，收到通知「✅ WorkBuddy 令牌捕获成功」即完成
+
+### 第三步：停用捕获重写，保留每日签到
+
+1. 收到成功通知后，回到模块里**停用（或删除）捕获重写**，只保留「WorkBuddy 签到」定时任务——它只需要运行一次。忘记停用也没关系：脚本只读取令牌、不发起请求，令牌相同会静默。
+2. 可以先手动点一下该定时任务运行一次，收到签到通知即部署成功。
+
+## Quantumult X 部署步骤
 
 ## 常见问题
 
