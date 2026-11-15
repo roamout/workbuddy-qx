@@ -200,33 +200,6 @@ function fmtBalance(v) {
   return Number.isInteger(r) ? String(r) : r.toFixed(2);
 }
 
-// 旅行状态 → 可读文案
-function travelText(st) {
-  if (!st) return "";
-  if (st.state === "arrived") {
-    const r = st.reward_credit != null ? "（可领 " + st.reward_credit + " 积分）" : "";
-    return "🐱 Buddy 已到达" + r;
-  }
-  if (st.state === "traveling") {
-    const loc = st.location || "";
-    let eta = "";
-    if (st.arrive_at) {
-      const at = Number(st.arrive_at) * 1000;
-      if (!isNaN(at)) {
-        const d = new Date(at);
-        const pad = function (n) { return (n < 10 ? "0" : "") + n; };
-        eta = " · " + pad(d.getHours()) + ":" + pad(d.getMinutes()) + " 到达";
-      }
-    }
-    return "🐱 Buddy 旅行中" + (loc ? " · " + loc : "") + eta;
-  }
-  if (st.state === "idle") {
-    if (st.daily_limit_reached === true) return "🐱 今日旅行次数已用完";
-    return "🐱 Buddy 空闲，可派出";
-  }
-  return "";
-}
-
 // ============ 主流程 ============
 async function run(isButton) {
   let title, content, icon, iconColor;
@@ -245,60 +218,50 @@ async function run(isButton) {
         const bal = await getBalance(token);
         const balText = fmtBalance(bal);
 
-        const lines = [];
-        if (st2.streak != null) lines.push("📅 连续签到 " + st2.streak + " 天");
-        if (balText) lines.push("💰 积分余额 " + balText);
-        if (travel) lines.push(travel);
+        const parts = [];
+        parts.push("+ " + (ck.credit != null ? ck.credit : "") + " 积分");
+        if (st2.streak != null) parts.push("连签 " + st2.streak + " 天");
+        if (balText) parts.push("余额 " + balText);
 
-        title = "🎉 签到成功 +" + (ck.credit != null ? ck.credit : "");
-        content = lines.join("\n");
-        icon = "checkmark.circle.fill";
-        iconColor = "#34c759";
+        title = "WorkBuddy 签到成功";
+        content = parts.join(" · ");
+        icon = "sparkles";
+        iconColor = "#0a6cff";
       } else if (ck.action === "already") {
-        const tr = await getTravel(token);
         const bal = await getBalance(token);
         const balText = fmtBalance(bal);
 
-        const lines = [];
-        if (st.streak != null) lines.push("📅 连续签到 " + st.streak + " 天");
-        if (balText) lines.push("💰 积分余额 " + balText);
-        const t = travelText(tr);
-        if (t) lines.push(t);
+        const parts = [];
+        if (st.streak != null) parts.push("连签 " + st.streak + " 天");
+        if (balText) parts.push("余额 " + balText);
 
-        title = "✅ 今日已签到";
-        content = lines.join("\n");
-        icon = "checkmark.seal.fill";
-        iconColor = "#34c759";
+        title = "WorkBuddy 已签到";
+        content = parts.join(" · ") || "今日已签到";
+        icon = "sparkles";
+        iconColor = "#0a6cff";
       } else {
         throw new Error("签到失败: " + ck.msg);
       }
     } else {
-      // 只读：查状态 + 旅行 + 余额
-      const tr = await getTravel(token);
+      // 只读：查状态 + 余额（精简为一行）
       const bal = await getBalance(token);
       const balText = fmtBalance(bal);
 
-      const lines = [];
-      if (st.checked) {
-        if (st.streak != null) lines.push("📅 连续签到 " + st.streak + " 天");
-      } else {
-        if (st.dailyCredit != null) lines.push("🎁 今日可领 " + st.dailyCredit + " 积分");
-        if (st.streak != null) lines.push("📅 连续签到 " + st.streak + " 天");
-      }
-      if (balText) lines.push("💰 积分余额 " + balText);
-      const t = travelText(tr);
-      if (t) lines.push(t);
+      const parts = [];
+      if (!st.checked && st.dailyCredit != null) parts.push("可领 " + st.dailyCredit);
+      if (st.streak != null) parts.push("连签 " + st.streak + " 天");
+      if (balText) parts.push("余额 " + balText);
 
       if (st.checked) {
-        title = "✅ 今日已签到";
-        icon = "checkmark.seal.fill";
-        iconColor = "#34c759";
+        title = "WorkBuddy 已签到";
+        content = parts.join(" · ") || "今日已签到";
+        iconColor = "#0a6cff";
       } else {
-        title = "未签到 · 点击签到";
-        icon = "circle.dashed";
+        title = "WorkBuddy 未签到";
+        content = parts.join(" · ") || "点击卡片签到";
         iconColor = "#ff9500";
       }
-      content = lines.join("\n") || "点击刷新获取信息";
+      icon = "sparkles";
     }
 
     $done({ title: title, content: content, icon: icon, "icon-color": iconColor });
@@ -307,7 +270,7 @@ async function run(isButton) {
     $done({
       title: "WorkBuddy 签到",
       content: "⚠️ " + msg,
-      icon: "exclamationmark.triangle.fill",
+      icon: "sparkles",
       "icon-color": "#ff3b30"
     });
   }
