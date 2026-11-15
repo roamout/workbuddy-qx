@@ -4,6 +4,15 @@
 #!homepage = https://github.com/roamout/workbuddy-qx
 
 # ============================================================
+# 可编辑参数（点模块「⋯」→ 编辑参数，即可在输入框里改签到时间）
+# ------------------------------------------------------------
+# cronexp：签到定时任务的 cron 表达式（分 时 日 月 周）
+#   默认 3 9 * * * 表示每天 09:03 签到
+# ============================================================
+#!arguments=cronexp:3 9 * * *
+#!arguments-desc=cronexp:签到时间（cron 表达式，如 0 8 * * * 表示每天 08:00）
+
+# ============================================================
 # 安装与使用说明
 # ------------------------------------------------------------
 # 1. 本模块只负责「签到」，不含令牌捕获。首次使用请先安装
@@ -11,7 +20,8 @@
 #    令牌会随每次签到自动滚动续期，无需重复捕获。
 # 2. 手动签到：Surge iOS 首页「脚本」卡片里长按「WorkBuddy签到(手动)」，
 #    即可立即执行一次签到（无需等定时）。
-# 3. 定时自动签到：每天 09:03 自动运行（避开整点）。
+# 3. 定时自动签到：默认每天 09:03 自动运行。改时间：点模块「⋯」→「编辑参数」，
+#    在「签到时间」输入框里填 cron 表达式（如 0 8 * * * = 每天 08:00）。
 # 4. 信息面板：Surge 首页右上角「信息面板」里会出现「WorkBuddy 签到」卡片，
 #    显示签到状态与余额；点击卡片即可直接签到，点右上角刷新查看最新状态。
 # 5. 若收到「令牌已失效/尚未获取令牌」提示，请临时装回「令牌捕获」模块、
@@ -29,5 +39,5 @@ workbuddy_checkin_panel = type=generic, script-path=https://raw.githubuserconten
 #    长按该脚本即可手动执行一次签到（无需等定时）。
 workbuddy_checkin_manual = type=generic, script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_checkin.surge.js, tag=WorkBuddy签到(手动)
 
-# 2) 定时自动签到：每天 09:03 避开整点，与手动脚本共用同一份脚本文件
-cron "3 9 * * *" script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_checkin.surge.js, tag=WorkBuddy签到(定时)
+# 2) 定时自动签到：cron 表达式取自头部 #!arguments 的 cronexp 参数（可在「编辑参数」里改）
+cron "{{{cronexp}}}" script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_checkin.surge.js, tag=WorkBuddy签到(定时)
