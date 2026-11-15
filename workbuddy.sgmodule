@@ -12,7 +12,9 @@
 # 2. MITM：首次需在 Surge 开启「MitM」并安装、信任证书。
 # 3. 打开 WorkBuddy App / 小程序，退出账号重新登录一次，
 #    收到「✅ WorkBuddy 令牌捕获成功」通知即完成捕获。
-# 4. 捕获成功后，可停用本模块的「捕获重写」部分（或整模块），
+# 4. 手动签到：Surge iOS 首页「脚本」卡片里找到「WorkBuddy签到(手动)」，
+#    长按即可立即执行一次签到（无需等定时）；定时任务每天 09:03 自动运行。
+# 5. 捕获成功后，可停用本模块的「捕获重写」部分（或整模块），
 #    只保留每日签到定时任务；令牌会随签到自动滚动续期，无需再管。
 # ============================================================
 
@@ -29,8 +31,13 @@ http-response ^https:\/\/[a-z.]*cloud\.tencent\.com\/ script-path=https://raw.gi
 http-response ^https:\/\/[a-z.]*myqcloud\.com\/ script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-myqcloud
 http-response ^https:\/\/open\.weixin\.qq\.com\/ script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-weixin
 
-# ============ 每日签到（长期运行，每天 09:03 避开整点） ============
-cron "3 9 * * *" script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_checkin.surge.js, tag=WorkBuddy签到
+# ============ 每日签到 ============
+# 1) 手动签到：type=generic 的手动脚本，出现在 Surge iOS 的「脚本」列表里，
+#    长按该脚本即可手动执行一次签到（无需等定时）。
+workbuddy_checkin_manual = type=generic, script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_checkin.surge.js, tag=WorkBuddy签到(手动)
+
+# 2) 定时自动签到：每天 09:03 避开整点，与手动脚本共用同一份脚本文件
+cron "3 9 * * *" script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_checkin.surge.js, tag=WorkBuddy签到(定时)
 
 # ============ MITM 主机名 ============
 [MITM]

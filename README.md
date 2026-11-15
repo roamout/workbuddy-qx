@@ -81,8 +81,8 @@ jsDelivr 镜像版：
 | `workbuddy.qx.conf` | QX 重写订阅配置（raw 版） | 含重写规则与 MITM 主机名，脚本走 GitHub raw |
 | `workbuddy.cdn.conf` | QX 重写订阅配置（CDN 版，国内推荐） | 同上，脚本走 jsDelivr |
 | `workbuddy_capture_token.surge.js` | Surge 重写脚本（一次性） | 同 capture，适配 Surge `$persistentStore`/`$notification` |
-| `workbuddy_checkin.surge.js` | Surge 定时任务（长期运行） | 同 checkin，适配 Surge `$httpClient`/`$persistentStore` |
-| `workbuddy.sgmodule` | Surge 模块（raw 版） | 重写 + 定时任务 + MITM，一键安装，脚本走 GitHub raw |
+| `workbuddy_checkin.surge.js` | Surge 签到脚本（长期运行） | 同 checkin，适配 Surge `$httpClient`/`$persistentStore`；可作手动脚本（长按执行）或定时任务 |
+| `workbuddy.sgmodule` | Surge 模块（raw 版） | 重写 + 手动/定时签到 + MITM，一键安装，脚本走 GitHub raw |
 | `workbuddy.cdn.sgmodule` | Surge 模块（CDN 版，国内推荐） | 同上，脚本走 jsDelivr |
 
 ## Surge 部署步骤
@@ -111,10 +111,11 @@ https://cdn.jsdelivr.net/gh/roamout/workbuddy-qx@main/workbuddy.cdn.sgmodule
 2. 退出账号后**重新登录一次**；本来就登录着的，杀掉 App 重进、或下拉刷新页面
 3. 稍等片刻，收到通知「✅ WorkBuddy 令牌捕获成功」即完成
 
-### 第三步：停用捕获重写，保留每日签到
+### 第三步：停用捕获重写，保留签到
 
-1. 收到成功通知后，回到模块里**停用（或删除）捕获重写**，只保留「WorkBuddy 签到」定时任务——它只需要运行一次。忘记停用也没关系：脚本只读取令牌、不发起请求，令牌相同会静默。
-2. 可以先手动点一下该定时任务运行一次，收到签到通知即部署成功。
+1. 收到成功通知后，回到模块里**停用（或删除）捕获重写**，只保留签到脚本——它只需要运行一次。忘记停用也没关系：脚本只读取令牌、不发起请求，令牌相同会静默。
+2. **手动签到**：Surge iOS 首页「脚本」卡片里长按 **「WorkBuddy签到(手动)」**，即可立即执行一次签到（无需等定时）；也可以手动点一下定时任务测试。
+3. 定时任务每天 09:03 自动运行，收到签到通知即部署成功。
 
 ## Quantumult X 部署步骤
 
