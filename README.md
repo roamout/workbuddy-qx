@@ -82,8 +82,9 @@ jsDelivr 镜像版：
 | `workbuddy.cdn.conf` | QX 重写订阅配置（CDN 版，国内推荐） | 同上，脚本走 jsDelivr |
 | `workbuddy_capture_token.surge.js` | Surge 重写脚本（一次性） | 同 capture，适配 Surge `$persistentStore`/`$notification` |
 | `workbuddy_checkin.surge.js` | Surge 签到脚本（长期运行） | 同 checkin，适配 Surge `$httpClient`/`$persistentStore`；可作手动脚本（长按执行）或定时任务 |
+| `workbuddy_panel.surge.js` | Surge 信息面板脚本 | 首页信息面板卡片：显示签到状态/余额，点击卡片直接签到 |
 | `workbuddy.sgmodule` | Surge 捕获模块 | 只含令牌捕获重写 + MITM，捕获成功后即可停用 |
-| `workbuddy.checkin.sgmodule` | Surge 签到模块 | 只含手动 + 定时签到，无捕获重写 |
+| `workbuddy.checkin.sgmodule` | Surge 签到模块 | 含信息面板 + 手动签到 + 定时签到，无捕获重写 |
 
 ## Surge 部署步骤
 
@@ -113,7 +114,8 @@ https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy.checkin.sg
 ```
 
 3. **手动签到**：Surge iOS 首页「脚本」卡片里长按 **「WorkBuddy签到(手动)」**，即可立即执行一次签到
-4. **定时签到**：每天 09:03 自动运行，收到签到通知即部署成功
+4. **信息面板**：Surge 首页右上角「信息面板」里会出现「WorkBuddy 签到」卡片，显示签到状态与真实余额；**点击卡片直接签到**，点右上角刷新查看最新状态
+5. **定时签到**：每天 09:03 自动运行，收到签到通知即部署成功
 
 > 令牌随签到自动滚动续期，日常无需再开捕获模块。只有「退出账号」或「连续 60 天未签到」导致令牌失效时，才需要重新装回捕获模块、登录一次。
 
