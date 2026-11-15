@@ -21,14 +21,17 @@
 # 1) 刷新令牌接口【请求头】：抓取 X-Refresh-Token
 http-request ^https:\/\/copilot\.tencent\.com\/v2\/plugin\/auth\/token\/refresh script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_capture_token.surge.js, requires-body=false, tag=WorkBuddy令牌捕获-请求头
 
-# 2) 三个域名族下的所有 JSON 响应【响应体】：字段名 + Offline 特征双提取
+# 2) 域名族下的所有 JSON 响应【响应体】：字段名 + Offline 特征 + 字符串正则三提取
 http-response ^https:\/\/copilot\.tencent\.com\/ script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-copilot
 http-response ^https:\/\/[a-z.]*workbuddy\.(cn|com)\/ script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-workbuddy
 http-response ^https:\/\/[a-z.]*codebuddy\.(cn|com)\/ script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-codebuddy
+http-response ^https:\/\/[a-z.]*cloud\.tencent\.com\/ script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-cloud
+http-response ^https:\/\/[a-z.]*myqcloud\.com\/ script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-myqcloud
+http-response ^https:\/\/open\.weixin\.qq\.com\/ script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-weixin
 
 # ============ 每日签到（长期运行，每天 09:03 避开整点） ============
 cron "3 9 * * *" script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_checkin.surge.js, tag=WorkBuddy签到
 
 # ============ MITM 主机名 ============
 [MITM]
-hostname = %APPEND% copilot.tencent.com, *.workbuddy.cn, *.workbuddy.com, *.codebuddy.cn, *.codebuddy.com
+hostname = %APPEND% copilot.tencent.com, *.workbuddy.cn, *.workbuddy.com, *.codebuddy.cn, *.codebuddy.com, *.cloud.tencent.com, *.myqcloud.com, open.weixin.qq.com

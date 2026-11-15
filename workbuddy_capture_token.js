@@ -27,7 +27,7 @@
  * 部署（完整订阅见 workbuddy.qx.conf）
  */
 
-const VERSION = "v1.1.0";
+const VERSION = "v1.2.0";
 
 // 与签到脚本共用同一把 key
 const PREF_KEY_RT = "workbuddy_checkin_rt";
@@ -113,6 +113,42 @@ function findByFieldName(obj, depth) {
     for (let i = 0; i < keys.length; i++) {
       const hit = findByFieldName(obj[keys[i]], depth + 1);
       if (hit) return hit;
+    }
+  }
+  return null;
+}
+
+// 从任意字符串里提取「typ=Offline」的长效 JWT（微信 OAuth 登录时 token 字段名
+// 可能是 access_token / id_token / credential 等，或藏在 redirect 的 fragment 里）
+function extractOfflineJwtFromString(s) {
+  if (typeof s !== "string") return null;
+  // 匹配 JWT：eyJ 开头，两段点分隔，长度足够
+  const re = /eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/g;
+  let m;
+  while ((m = re.exec(s)) !== null) {
+    const t = m[0];
+    if (isOfflineToken(t)) return t;
+  }
+  return null;
+}
+
+// 从响应头（Set-Cookie / Location 等）里找长效令牌
+function extractFromHeaders(headers) {
+  if (!headers) return null;
+  const keys = Object.keys(headers);
+  for (let i = 0; i < keys.length; i++) {
+    const v = headers[keys[i]];
+    if (typeof v !== "string") continue;
+    const hit = extractOfflineJwtFromString(v);
+    if (hit) return hit;
+    // 有些 Set-Cookie 值里直接是 token 片段，也扫一遍普通 JWT（放宽为任意 JWT，
+    // 只要像 refresh token 形态就抓，交由签到脚本刷新接口校验有效性）
+    if (/refresh|token|auth/i.test(keys[i])) {
+      const re = /eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/g;
+      let m;
+      while ((m = re.exec(v)) !== null) {
+        if (isJwt(m[0])) return m[0];
+      }
     }
   }
   return null;
@@ -217,19 +253,43 @@ function saveToken(rt, source) {
     if (typeof $response !== "undefined" && $response) {
       const json = safeParse($response.body);
       if (json) {
-        // 先精确字段，再 Offline 特征兜底
-        const rt = findByFieldName(json, 0) || findByOfflineFeature(json);
+        // 1) 精确字段 2) Offline 特征兜底（递归扫对象） 3) 原始字符串正则兜底
+        let rt = findByFieldName(json, 0)
+          || findByOfflineFeature(json)
+          || extractOfflineJwtFromString(
+              typeof $response.body === "string" ? $response.body : JSON.stringify($response.body));
         if (rt) { saveToken(rt, "响应体"); $done({}); return; }
+      } else if (typeof $response.body === "string") {
+        // 非 JSON 响应（如 OAuth 302 的 Location / 文本），直接从字符串扫
+        const rt = extractOfflineJwtFromString($response.body);
+        if (rt) { saveToken(rt, "响应文本"); $done({}); return; }
       }
+      // 响应头里也可能带（Set-Cookie / Location）
+      const rtHdr = extractFromHeaders($response.headers);
+      if (rtHdr) { saveToken(rtHdr, "响应头"); $done({}); return; }
+
       logProbe(reqUrl, $response.body);
       $done({});
       return;
     }
 
-    // —— 请求头阶段：刷新接口 X-Refresh-Token ——
+    // —— 请求头阶段：刷新接口 X-Refresh-Token / Authorization ——
     if (typeof $request !== "undefined" && $request) {
-      const rt = getHeaderCI($request.headers, "X-Refresh-Token");
+      let rt = getHeaderCI($request.headers, "X-Refresh-Token");
+      if (!rt) {
+        const auth = getHeaderCI($request.headers, "Authorization");
+        if (auth && /bearer\s+/i.test(auth)) {
+          const candidate = auth.replace(/^bearer\s+/i, "").trim();
+          // 只有像 JWT 才收；否则继续扫其它头
+          if (isJwt(candidate)) rt = candidate;
+        }
+      }
       if (rt && isJwt(rt)) { saveToken(rt, "刷新请求头"); $done({}); return; }
+
+      // 兜底：扫全部请求头里的 JWT
+      const rtHdr = extractFromHeaders($request.headers);
+      if (rtHdr) { saveToken(rtHdr, "请求头"); $done({}); return; }
+
       $done({});
       return;
     }

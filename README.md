@@ -121,13 +121,17 @@ https://cdn.jsdelivr.net/gh/roamout/workbuddy-qx@main/workbuddy.cdn.sgmodule
 ## 常见问题
 
 **Q：收不到捕获成功通知？（按顺序排查）**
-1. 重写订阅已启用，展开能看到 **4 条规则**；旧订阅请删掉再重新添加（建议直接用 CDN 版）
+1. 重写订阅已启用，展开能看到 **多条规则**（v1.2.0 起已覆盖微信登录的腾讯身份认证域名）；旧订阅请删掉再重新添加（建议直接用 CDN 版）
 2. MITM 证书已安装且在系统设置「通用 → 关于本机 → 证书信任设置」中信任
 3. 打开 **QX 风车 → 日志**，保持在日志页，再去 WorkBuddy 退出账号重新登录：
-   - 日志里完全没有 `copilot.tencent.com` / `workbuddy` / `codebuddy` 相关请求 → 该 App 流量没走 QX（换 App 或小程序再试）
+   - 日志里完全没有 `copilot.tencent.com` / `workbuddy` / `codebuddy` / `cloud.tencent.com` 相关请求 → 该 App 流量没走 QX（换 App 或小程序再试）
    - 有请求但没有任何 `[WorkBuddyCapture]` 日志 → 脚本没下载成功，删掉订阅改用 **CDN 版** 重新添加
    - 有 `[WorkBuddyCapture] probe ...` 日志但没成功 → 把该日志截图反馈，需要补充域名
 4. 杀掉 App 彻底重进；小程序抓不到就换 App（个别版本对证书有校验）
+
+**Q：为什么只有「手机号登录」能抓到令牌，微信扫码/公众号登录抓不到？**
+- 因为不同登录方式的鉴权请求走**不同的域名**：手机号/邮箱/SSO 登录全程在 `workbuddy.cn` 自己域名内签发令牌，被规则命中；而微信扫码登录会跳转到**腾讯身份认证域名**（`*.cloud.tencent.com` / `*.myqcloud.com` / `open.weixin.qq.com`）回跳并签发令牌，旧版规则没覆盖这些域名。
+- v1.2.0 起已把这些微信登录域名纳入 MITM 与重写规则，微信登录现在也能捕获。**请删除旧订阅、重新添加（CDN 版），并确保 MITM 主机名已更新。**
 
 **Q：手动填写令牌怎么做？**
 - 可把令牌填入 `workbuddy_checkin.js` 顶部 `MANUAL_REFRESH_TOKEN`（需用本地脚本而非远程任务）

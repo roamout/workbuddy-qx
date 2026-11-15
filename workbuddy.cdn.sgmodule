@@ -15,10 +15,13 @@ http-request ^https:\/\/copilot\.tencent\.com\/v2\/plugin\/auth\/token\/refresh 
 http-response ^https:\/\/copilot\.tencent\.com\/ script-path=https://cdn.jsdelivr.net/gh/roamout/workbuddy-qx@main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-copilot
 http-response ^https:\/\/[a-z.]*workbuddy\.(cn|com)\/ script-path=https://cdn.jsdelivr.net/gh/roamout/workbuddy-qx@main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-workbuddy
 http-response ^https:\/\/[a-z.]*codebuddy\.(cn|com)\/ script-path=https://cdn.jsdelivr.net/gh/roamout/workbuddy-qx@main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-codebuddy
+http-response ^https:\/\/[a-z.]*cloud\.tencent\.com\/ script-path=https://cdn.jsdelivr.net/gh/roamout/workbuddy-qx@main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-cloud
+http-response ^https:\/\/[a-z.]*myqcloud\.com\/ script-path=https://cdn.jsdelivr.net/gh/roamout/workbuddy-qx@main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-myqcloud
+http-response ^https:\/\/open\.weixin\.qq\.com\/ script-path=https://cdn.jsdelivr.net/gh/roamout/workbuddy-qx@main/workbuddy_capture_token.surge.js, requires-body=true, max-size=2097152, tag=WorkBuddy令牌捕获-响应体-weixin
 
 # ============ 每日签到（长期运行，每天 09:03） ============
 cron "3 9 * * *" script-path=https://cdn.jsdelivr.net/gh/roamout/workbuddy-qx@main/workbuddy_checkin.surge.js, tag=WorkBuddy签到
 
 # ============ MITM 主机名 ============
 [MITM]
-hostname = %APPEND% copilot.tencent.com, *.workbuddy.cn, *.workbuddy.com, *.codebuddy.cn, *.codebuddy.com
+hostname = %APPEND% copilot.tencent.com, *.workbuddy.cn, *.workbuddy.com, *.codebuddy.cn, *.codebuddy.com, *.cloud.tencent.com, *.myqcloud.com, open.weixin.qq.com
