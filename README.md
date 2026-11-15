@@ -82,40 +82,40 @@ jsDelivr 镜像版：
 | `workbuddy.cdn.conf` | QX 重写订阅配置（CDN 版，国内推荐） | 同上，脚本走 jsDelivr |
 | `workbuddy_capture_token.surge.js` | Surge 重写脚本（一次性） | 同 capture，适配 Surge `$persistentStore`/`$notification` |
 | `workbuddy_checkin.surge.js` | Surge 签到脚本（长期运行） | 同 checkin，适配 Surge `$httpClient`/`$persistentStore`；可作手动脚本（长按执行）或定时任务 |
-| `workbuddy.sgmodule` | Surge 模块（raw 版） | 重写 + 手动/定时签到 + MITM，一键安装，脚本走 GitHub raw |
-| `workbuddy.cdn.sgmodule` | Surge 模块（CDN 版，国内推荐） | 同上，脚本走 jsDelivr |
+| `workbuddy.sgmodule` | Surge 捕获模块 | 只含令牌捕获重写 + MITM，捕获成功后即可停用 |
+| `workbuddy.checkin.sgmodule` | Surge 签到模块 | 只含手动 + 定时签到，无捕获重写 |
 
 ## Surge 部署步骤
 
-### 第一步：安装模块
+Surge 版把「令牌捕获」和「签到」拆成了**两个独立模块**，可分别安装、分别开关：
 
-打开 Surge → 首页「模块」→ 「安装新模块」，粘贴以下模块链接（**国内网络推荐 CDN 版**）：
+- **捕获模块**（`workbuddy.sgmodule`，一次性）：只在首次登录 / 令牌失效时临时开启；
+- **签到模块**（`workbuddy.checkin.sgmodule`，长期）：日常只保留这个，含手动 + 定时签到。
+
+### 第一步：安装捕获模块，登录捕获令牌
+
+打开 Surge → 首页「模块」→ 「安装新模块」，粘贴捕获模块链接：
 
 ```
 https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy.sgmodule
 ```
 
-jsDelivr CDN 版：
+1. 打开 **WorkBuddy App**（或微信 WorkBuddy 小程序），退出账号重新登录一次
+2. 收到通知「✅ WorkBuddy 令牌捕获成功」即完成
+
+### 第二步：停用捕获模块，安装签到模块
+
+1. 捕获成功后，回到「模块」里**停用（或删除）捕获模块**——它只需要运行一次
+2. 安装签到模块：
 
 ```
-https://cdn.jsdelivr.net/gh/roamout/workbuddy-qx@main/workbuddy.cdn.sgmodule
+https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy.checkin.sgmodule
 ```
 
-> 两个模块二选一，不要同时装：`workbuddy.sgmodule` 脚本走 GitHub raw；`workbuddy.cdn.sgmodule` 走 jsDelivr。
+3. **手动签到**：Surge iOS 首页「脚本」卡片里长按 **「WorkBuddy签到(手动)」**，即可立即执行一次签到
+4. **定时签到**：每天 09:03 自动运行，收到签到通知即部署成功
 
-安装后确认：① 模块已启用；② 首页能看到「WorkBuddy 签到」定时任务和几条「WorkBuddy 令牌捕获」重写；③ 「MitM」已开启并安装、信任证书（首次抓 HTTPS 必须）。
-
-### 第二步：登录一次，自动捕获令牌
-
-1. 打开 **WorkBuddy App**（或微信 WorkBuddy 小程序）
-2. 退出账号后**重新登录一次**；本来就登录着的，杀掉 App 重进、或下拉刷新页面
-3. 稍等片刻，收到通知「✅ WorkBuddy 令牌捕获成功」即完成
-
-### 第三步：停用捕获重写，保留签到
-
-1. 收到成功通知后，回到模块里**停用（或删除）捕获重写**，只保留签到脚本——它只需要运行一次。忘记停用也没关系：脚本只读取令牌、不发起请求，令牌相同会静默。
-2. **手动签到**：Surge iOS 首页「脚本」卡片里长按 **「WorkBuddy签到(手动)」**，即可立即执行一次签到（无需等定时）；也可以手动点一下定时任务测试。
-3. 定时任务每天 09:03 自动运行，收到签到通知即部署成功。
+> 令牌随签到自动滚动续期，日常无需再开捕获模块。只有「退出账号」或「连续 60 天未签到」导致令牌失效时，才需要重新装回捕获模块、登录一次。
 
 ## Quantumult X 部署步骤
 

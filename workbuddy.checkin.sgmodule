@@ -1,0 +1,25 @@
+#!name = WorkBuddy 签到（Surge 模块）
+#!desc = 腾讯 WorkBuddy「Buddy 加油站」每日自动签到：手动签到 + 每日定时签到 + 领旅行奖励 + 播报真实积分余额。令牌自动滚动续期。
+#!author = roamout
+#!homepage = https://github.com/roamout/workbuddy-qx
+
+# ============================================================
+# 安装与使用说明
+# ------------------------------------------------------------
+# 1. 本模块只负责「签到」，不含令牌捕获。首次使用请先安装
+#    「WorkBuddy 令牌捕获」模块登录一次，捕获长效令牌后再装本模块；
+#    令牌会随每次签到自动滚动续期，无需重复捕获。
+# 2. 手动签到：Surge iOS 首页「脚本」卡片里长按「WorkBuddy签到(手动)」，
+#    即可立即执行一次签到（无需等定时）。
+# 3. 定时自动签到：每天 09:03 自动运行（避开整点）。
+# 4. 若收到「令牌已失效/尚未获取令牌」提示，请临时装回「令牌捕获」模块、
+#    重新登录一次，再停用捕获模块即可。
+# ============================================================
+
+[Script]
+# 1) 手动签到：type=generic 的手动脚本，出现在 Surge iOS 的「脚本」列表里，
+#    长按该脚本即可手动执行一次签到（无需等定时）。
+workbuddy_checkin_manual = type=generic, script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_checkin.surge.js, tag=WorkBuddy签到(手动)
+
+# 2) 定时自动签到：每天 09:03 避开整点，与手动脚本共用同一份脚本文件
+cron "3 9 * * *" script-path=https://raw.githubusercontent.com/roamout/workbuddy-qx/main/workbuddy_checkin.surge.js, tag=WorkBuddy签到(定时)
